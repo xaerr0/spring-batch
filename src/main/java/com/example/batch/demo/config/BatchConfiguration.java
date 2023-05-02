@@ -42,34 +42,33 @@ public class BatchConfiguration {
                 .build();
     }
 
-    //add your Steps, ItemReaders, ItemProcessors, and ItemWriter below
-
-    //Steps
     @Bean
-    public Step nameStep(StepBuilderFactory stepBuilderFactory, ItemReader<Employee> csvReader, NameProcessor processor, EmployeeWriter writer) {
+    public Step nameStep(StepBuilderFactory stepBuilderFactory, ItemReader<Employee> csvReader,
+                         NameProcessor processor, EmployeeWriter writer) {
         // This step just reads the csv file and then writes the entries into the database
         return stepBuilderFactory.get("name-step")
-                .<Employee, Employee>chunk(100)
-                .reader(csvReader)
-                .processor(processor)
-                .writer(writer)
-                .allowStartIfComplete(false)
+                .<Employee, Employee>chunk(250)
+                .reader(csvReader)      // EXTRACT
+                .processor(processor)   // TRANSFORM
+                .writer(writer)         // LOAD
                 .build();
     }
 
     @Bean
-    public Step designationStep(StepBuilderFactory stepBuilderFactory, ItemReader<Employee> repositoryReader, DesignationProcessor processor, EmployeeWriter writer) {
+    public Step designationStep(StepBuilderFactory stepBuilderFactory, ItemReader<Employee> repositoryReader,
+                                DesignationProcessor processor, EmployeeWriter writer) {
         // This step reads the data from the database and then converts the designation into the matching Enums.
         return stepBuilderFactory.get("designation-step")
-                .<Employee, Employee>chunk(100)
-                .reader(repositoryReader)
-                .processor(processor)
-                .writer(writer)
+                .<Employee, Employee>chunk(250)
+                .reader(repositoryReader)   // EXTRACT
+                .processor(processor)       // TRANSFORM
+                .writer(writer)             // LOAD
+//                .faultTolerant()
+//                .skipLimit(10)
+//                .skip(Exception.class)
                 .build();
     }
 
-
-    //Item Readers
     @Bean
     public FlatFileItemReader<Employee> csvReader(@Value("${inputFile}") String inputFile) {
         return new FlatFileItemReaderBuilder<Employee>()
@@ -92,7 +91,6 @@ public class BatchConfiguration {
                 .build();
     }
 
-    //Item Processors
     @Component
     public static class NameProcessor implements ItemProcessor<Employee, Employee> {
         // This helps you to process the names of the employee at a set time
@@ -115,7 +113,6 @@ public class BatchConfiguration {
         }
     }
 
-    //Item Writer
     @Component
     public static class EmployeeWriter implements ItemWriter<Employee> {
 
